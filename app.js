@@ -404,11 +404,21 @@ const SAIL_EVENTS = [
 
 const FIRE_EVENTS = ["Assault and destruction of Thebes", "Persepolis: occupation and burning"];
 const DEATH_EVENTS = ["Death of Alexander"];
+const CITY_FOUNDING_EVENTS = {
+  "Foundation of Alexandria": "Alexandria",
+  "Revolt of Satibarzanes": "Alexandria in Aria",
+  "Arachosian base": "Alexandria in Arachosia",
+  "Battle of the Jaxartes": "Alexandria Eschate",
+  "Battle of the Hydaspes": "Bucephala & Nicaea",
+  "Campaign against the Oreitans": "Alexandria among the Oreitans"
+};
+const FOUNDATION_ANIMATION_MS = 3800;
 
 let currentIndex = 0;
 let playing = false;
 let playTimer = null;
 let animationFrame = null;
+let specialEffectTimer = null;
 let followRoute = true;
 let detailsDismissed = false;
 let activeTypes = new Set(Object.keys(TYPE_META));
@@ -1010,8 +1020,10 @@ function applyFilters() {
 }
 
 function triggerSpecialEffects(event, index) {
+  clearTimeout(specialEffectTimer);
+  specialEffectTimer = null;
   effectsLayer.clearLayers();
-  document.body.classList.remove('effect-sailing', 'effect-fire', 'effect-death');
+  document.body.classList.remove('effect-sailing', 'effect-fire', 'effect-death', 'effect-foundation');
 
   if (FIRE_EVENTS.includes(event.title)) {
     document.body.classList.add('effect-fire');
@@ -1031,6 +1043,41 @@ function triggerSpecialEffects(event, index) {
       iconSize: [60, 60], iconAnchor: [30, 30]
     });
     L.marker([event.lat, event.lng], { icon: deathIcon, interactive: false, zIndexOffset: 200 }).addTo(effectsLayer);
+    specialEffectTimer = setTimeout(() => {
+      if (currentIndex !== index) return;
+      document.body.classList.remove('effect-death');
+      effectsLayer.clearLayers();
+      specialEffectTimer = null;
+    }, 3000);
+  }
+
+  const foundedCity = CITY_FOUNDING_EVENTS[event.title];
+  if (foundedCity) {
+    document.body.classList.add('effect-foundation');
+    const foundationIcon = L.divIcon({
+      className: 'foundation-effect-marker',
+      html: `<div class="foundation-effect" aria-hidden="true">
+        <div class="foundation-glow"></div>
+        <svg class="foundation-city" viewBox="0 0 120 92" role="presentation">
+          <ellipse class="foundation-ground" cx="60" cy="82" rx="43" ry="7" />
+          <path class="foundation-house house-left" d="M12 81V61h19v20zM10 61l11-10 12 10z" />
+          <path class="foundation-house house-right" d="M88 81V58h21v23zM86 58l12-11 13 11z" />
+          <path class="foundation-wall" d="M31 81V55h58v26z" />
+          <path class="foundation-temple" d="M38 55 60 39l22 16zM40 58h40v4H40zM43 62v18h5V62zm14 0v18h6V62zm15 0v18h5V62zM38 80h44v4H38z" />
+          <path class="foundation-tower" d="M33 56V43h9v13zm45 0V43h9v13z" />
+          <path class="foundation-banner" d="M60 38V23m0 1 10 4-10 4" />
+        </svg>
+        <span class="foundation-label"><small>CITY FOUNDED</small><strong>${escapeHTML(foundedCity)}</strong></span>
+      </div>`,
+      iconSize: [170, 132], iconAnchor: [85, 91]
+    });
+    L.marker([event.lat, event.lng], { icon: foundationIcon, interactive: false, zIndexOffset: 210 }).addTo(effectsLayer);
+    specialEffectTimer = setTimeout(() => {
+      if (currentIndex !== index) return;
+      document.body.classList.remove('effect-foundation');
+      effectsLayer.clearLayers();
+      specialEffectTimer = null;
+    }, FOUNDATION_ANIMATION_MS);
   }
 
   // Check if currently at or moving from/to a sailing event
@@ -1139,7 +1186,8 @@ function animateStep() {
       if (endIndex === EVENTS.length - 1) stopPlayback();
       else {
         snapToSegment(endIndex);
-        playTimer = setTimeout(animateStep, duration - moveDuration);
+        const cityPause = CITY_FOUNDING_EVENTS[EVENTS[endIndex].title] ? FOUNDATION_ANIMATION_MS : 0;
+        playTimer = setTimeout(animateStep, Math.max(duration - moveDuration, cityPause));
       }
     }
   };

@@ -140,7 +140,13 @@
               <option value="360">4×</option>
             </select>
           </label>
-          <button class="follow-button is-active" id="followButton" aria-pressed="true">Follow</button>
+          <div class="camera-control">
+            <span class="playback-control-label">CAMERA</span>
+            <button class="follow-button is-active" id="followButton" type="button" aria-label="Toggle follow camera" aria-pressed="true">
+              <svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1"/><path d="M8 1v2M8 13v2M1 8h2m10 0h2"/></svg>
+              <span>Follow camera</span>
+            </button>
+          </div>
         </div>
       </section>
     </main>
