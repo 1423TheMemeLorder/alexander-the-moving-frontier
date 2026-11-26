@@ -1,6 +1,7 @@
 # Alexander · The Moving Frontier
 
-An interactive campaign atlas of Alexander III of Macedon, from Chaeronea in 338 BCE to Babylon in 323 BCE. This is not a map of an empire at its maximum extent. It is a chronological reconstruction of decisions, battles, sieges, crossings, reversals, winter quarters, political settlements, and the long return from the Indus. The atlas is built around a simple rule: when the evidence is uncertain, the interface should say so instead of turning an ancient narrative into fake GPS precision.
+
+An interactive historical atlas of Alexander the Great (Alexander III of Macedon), tracing his campaigns from Chaeronea in 338 BCE to his death in Babylon in 323 BCE. This is not a map of an empire at its maximum extent. It is a chronological reconstruction of decisions, battles, sieges, crossings, reversals, winter quarters, political settlements, and the long return from the Indus. The atlas is built around a simple rule: when the evidence is uncertain, the interface should say so instead of turning an ancient narrative into fake GPS precision.
 
 ![Alexander · The Moving Frontier atlas showing the Indus campaign and sailing route](assets/alexander-moving-frontier-atlas.png)
 
