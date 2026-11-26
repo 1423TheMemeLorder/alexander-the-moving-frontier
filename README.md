@@ -1,8 +1,6 @@
 # Alexander · The Moving Frontier
 
-An interactive campaign atlas of Alexander III of Macedon, from Chaeronea in 338 BCE to Babylon in 323 BCE.
-
-This is not a map of an empire at its maximum extent. It is a chronological reconstruction of decisions, battles, sieges, crossings, reversals, winter quarters, political settlements, and the long return from the Indus. The atlas is built around a simple rule: when the evidence is uncertain, the interface should say so instead of turning an ancient narrative into fake GPS precision.
+An interactive campaign atlas of Alexander III of Macedon, from Chaeronea in 338 BCE to Babylon in 323 BCE. This is not a map of an empire at its maximum extent. It is a chronological reconstruction of decisions, battles, sieges, crossings, reversals, winter quarters, political settlements, and the long return from the Indus. The atlas is built around a simple rule: when the evidence is uncertain, the interface should say so instead of turning an ancient narrative into fake GPS precision.
 
 ![Alexander · The Moving Frontier atlas showing the Indus campaign and sailing route](assets/alexander-moving-frontier-atlas.png)
 
@@ -20,27 +18,20 @@ The current edition contains **83 episodes**, divided into:
 | Battles | 11 |
 | Political events | 11 |
 
-Each episode carries more than a marker. It has a date or date range, ancient and modern place context, a short account, the decision Alexander made, the outcome, a confidence note, optional camp information, and one or more source references.
+## Explore the atlas
 
-The map also includes:
+**[Launch Alexander · The Moving Frontier ↗](https://1423thememelorder.github.io/alexander-the-moving-frontier/)**
 
-- animated chronological playback with four speeds;
-- filters for battles, sieges, hostile actions, decisions, camps, and political events;
-- full-text search across titles, places, summaries, decisions, and campaign phases;
-- 27 named landmarks, including Troy, Siwa, Babylon, Persepolis, and Taxila;
-- 13 editable historical-region overlays from Illyria to the Indus;
-- terrain, topographic, modern-street, and satellite basemaps;
-- browser-side saving of region colours, plus JSON import and export;
-- separate visual treatments for selected fire, sailing, and death episodes;
-- desktop and mobile layouts with a collapsible campaign log.
+### Run locally
 
-## Run locally
+Prefer to run the atlas on your own machine?
 
-1. Download the repository as a ZIP.
-2. Extract the files.
-3. Double-click `index.html`.
+1. Download the repository using **Code → Download ZIP**.
+2. Extract the downloaded archive.
+3. Open `index.html` in your browser.
 
-The atlas opens in your browser. An internet connection is required to load the map tiles and external interface resources.
+
+> **Note:** An internet connection is needed to load map tiles and external interface resources.
 
 ## Controls
 
