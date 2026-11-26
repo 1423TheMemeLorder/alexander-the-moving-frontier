@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "description": "Default historical-region colours for Alexander · The Moving Frontier. The browser database and imported files override these values.",
+  "regionColors": {
+    "illyria": "#826F91",
+    "macedon": "#A67A55",
+    "greece": "#6F879B",
+    "thrace": "#728A70",
+    "anatolia": "#B39459",
+    "levant": "#AD6C59",
+    "egypt": "#B59A62",
+    "mesopotamia": "#8B785F",
+    "persia": "#9B5F5B",
+    "gedrosia": "#9A7951",
+    "bactria": "#716A92",
+    "sogdiana": "#69769A",
+    "india": "#4F8A7C"
+  }
+}

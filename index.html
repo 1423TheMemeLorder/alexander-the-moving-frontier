@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="An animated, source-aware map of Alexander the Great's campaigns, 338-323 BCE." />
+  <title>Alexander · The Moving Frontier</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-main">
+        <div class="brand-block">
+          <div class="eyebrow">CAMPAIGN ATLAS · 338-323 BCE</div>
+          <h1>Alexander <span>The Moving Frontier</span></h1>
+        </div>
+
+        <label class="header-search">
+          <span class="sr-only">Search campaign events</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+          <input id="searchInput" type="search" placeholder="Search events, people & places" />
+          <kbd>/</kbd>
+        </label>
+
+        <div class="header-actions">
+          <button class="quiet-button" id="sourcesButton" aria-controls="sourcesDialog">Sources</button>
+          <button class="icon-button" id="aboutButton" aria-label="Open map guide">?</button>
+        </div>
+      </div>
+
+      <div class="command-strip" aria-label="Campaign filters and map options">
+        <div class="command-label">Events</div>
+        <div class="filter-row" id="typeFilters" aria-label="Filter event types"></div>
+        <div class="command-divider" aria-hidden="true"></div>
+        <label class="layer-chip"><input type="checkbox" id="campsToggle" checked /><span>Camps & halts</span></label>
+        <button class="layer-chip command-button" id="regionsButton" aria-controls="regionPanel" aria-expanded="false"><span>Historical regions</span></button>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-controls="campaignSidebar" aria-expanded="true" title="Collapse campaign log">
+        <span class="sidebar-toggle-icon" aria-hidden="true"><</span>
+        <span class="sidebar-toggle-label">Log</span>
+      </button>
+
+      <aside class="sidebar" id="campaignSidebar" aria-label="Campaign timeline">
+        <div class="sidebar-heading">
+          <div>
+            <span class="sidebar-eyebrow">CHRONOLOGY</span>
+            <h2>Campaign log</h2>
+          </div>
+          <div class="sidebar-meta"><strong id="eventCount">0</strong> episodes</div>
+        </div>
+        <div class="timeline-heading">
+          <span>338-323 BCE</span>
+          <button id="latestButton" class="text-button">Latest →</button>
+        </div>
+        <section class="event-list" id="eventList" aria-live="polite"></section>
+      </aside>
+
+      <section class="map-stage" aria-label="Animated campaign map">
+        <div id="map"></div>
+        <div class="map-wash" aria-hidden="true"></div>
+
+        <section class="region-panel" id="regionPanel" aria-label="Historical region colours" hidden>
+          <div class="region-panel-heading">
+            <div>
+              <span class="panel-eyebrow">MAP LAYER</span>
+              <h2>Historical regions</h2>
+            </div>
+            <button class="region-panel-close" id="regionPanelClose" aria-label="Close historical regions panel">x</button>
+          </div>
+          <label class="toggle-row region-visibility"><input type="checkbox" id="regionsToggle" checked /><span>Show region boundaries and labels</span></label>
+          <label class="field-label" for="regionSelect">Selected region</label>
+          <select id="regionSelect" class="region-select"></select>
+          <div class="region-color-row">
+            <label for="regionColor">Fill colour</label>
+            <input id="regionColor" type="color" value="#8e6a93" />
+            <output id="regionColorValue" for="regionColor">#8E6A93</output>
+          </div>
+          <p class="region-hint" id="regionDescription">Select a region here or click one directly on the map.</p>
+          <div class="region-actions">
+            <button id="resetRegionColor" type="button">Reset selected</button>
+            <button id="resetAllRegionColors" type="button">Reset all</button>
+          </div>
+          <div class="region-file-actions">
+            <button id="exportRegionColors" type="button">Export colour file</button>
+            <button id="importRegionColors" type="button">Import colour file</button>
+            <input id="regionColorFile" class="sr-only" type="file" accept="application/json,.json" />
+          </div>
+          <p class="region-save-status" id="regionSaveStatus" role="status">Loading saved colours…</p>
+          <p class="region-storage-note">Changes are saved automatically in this browser's local database. Export the JSON file as a portable backup.</p>
+        </section>
+
+        <div class="map-legend" aria-label="Map legend">
+          <div><i class="legend-dot battle"></i>Battle</div>
+          <div><i class="legend-dot siege"></i>Siege</div>
+          <div><i class="legend-dot decision"></i>Decision</div>
+          <div><i class="legend-dot camp"></i>Camp / halt</div>
+          <div><i class="legend-dot attack"></i>Hostile action</div>
+        </div>
+
+        <article class="event-card is-empty" id="eventCard" aria-live="polite" aria-hidden="true">
+          <button class="card-close" id="cardClose" aria-label="Close event details">x</button>
+          <div class="card-kicker" id="cardKicker">SELECT AN EVENT</div>
+          <h2 id="cardTitle">Trace the campaign</h2>
+          <p class="card-place" id="cardPlace">Choose a marker or timeline entry.</p>
+          <div class="card-tags" id="cardTags"></div>
+          <p id="cardSummary">Press play to animate Alexander's route. The map pauses briefly at each campaign episode.</p>
+          <dl class="decision-grid" id="decisionGrid"></dl>
+          <div class="confidence-note" id="confidenceNote"></div>
+          <div class="card-nav">
+            <button id="prevEvent" class="nav-button" aria-label="Previous event">← Previous</button>
+            <span id="eventPosition">— / —</span>
+            <button id="nextEvent" class="nav-button" aria-label="Next event">Next →</button>
+          </div>
+        </article>
+
+        <div class="playback" role="group" aria-label="Campaign animation controls">
+          <button class="play-button" id="playButton" aria-label="Play timeline"><span id="playIcon">▶</span></button>
+          <div class="playback-main">
+            <div class="playback-meta">
+              <strong id="playbackDate">338 BCE</strong>
+              <span id="playbackTitle">Chaeronea</span>
+            </div>
+            <input id="timelineRange" type="range" min="0" max="1" value="0" step="1" aria-label="Campaign timeline" />
+            <div class="era-labels"><span>MACEDON</span><span>PERSIA</span><span>CENTRAL ASIA</span><span>INDIA & RETURN</span></div>
+          </div>
+          <label class="speed-control">SPEED
+            <select id="speedSelect" aria-label="Animation speed">
+              <option value="2200">0.5x</option>
+              <option value="1300" selected>1x</option>
+              <option value="700">2x</option>
+              <option value="360">4x</option>
+            </select>
+          </label>
+          <button class="follow-button is-active" id="followButton" aria-pressed="true">Follow Camera</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="sourcesDialog" class="info-dialog">
+    <form method="dialog"><button class="dialog-close" aria-label="Close">x</button></form>
+    <div class="dialog-eyebrow">READING THE EVIDENCE</div>
+    <h2>Sources, uncertainty & scope</h2>
+    <p>This is a source-aware reconstruction of major battles, sieges, assaults, enemy attacks, strategic decisions, winter quarters and attested halts connected with Alexander's career. Ancient narratives do not preserve every daily camp or skirmish.</p>
+    <div class="method-grid">
+      <div><b>Exact</b><p>Securely dated or closely located by the evidence.</p></div>
+      <div><b>Approximate</b><p>Month, season or modern coordinate is an informed estimate.</p></div>
+      <div><b>Disputed</b><p>Date or ancient place identification remains debated.</p></div>
+    </div>
+    <h3>Primary and reference works</h3>
+    <ol class="source-list" id="sourceList"></ol>
+    <p class="smallprint">Dates are BCE. Route lines follow source-supported land, coastal, river and crossing corridors; intermediate control points keep the reconstruction off implausible open-water shortcuts. Exact ancient roads and landing places remain approximate where the evidence is incomplete. Blue dashed legs mark water travel. The editable historical-region polygons—including Illyria—are broad orientation zones, not claims of fixed or universally agreed ancient borders. Modern borders and labels come from the selected basemap.</p>
+  </dialog>
+
+  <dialog id="aboutDialog" class="info-dialog compact-dialog">
+    <form method="dialog"><button class="dialog-close" aria-label="Close">x</button></form>
+    <div class="dialog-eyebrow">MAP GUIDE</div>
+    <h2>How to explore</h2>
+    <ul>
+      <li><b>Play</b> animates the route and keeps the moving marker centred on the campaign line. A boat appears only while a blue water leg is being traversed.</li>
+      <li><b>Drag the timeline</b> to jump to any episode.</li>
+      <li><b>Select a marker</b> for Alexander's decision, outcome, camp note and evidence confidence.</li>
+      <li><b>Filter</b> battles, sieges, hostile actions, decisions, camps and political events from the top bar.</li>
+      <li><b>Collapse the campaign log</b> with the edge button or the <kbd>B</kbd> key.</li>
+      <li><b>Historical regions</b> opens editable geographic polygons, including Illyria. Click a region to recolour it; colours are saved automatically.</li>
+      <li><b>Switch basemaps</b> with the layer control in the map's upper-right corner.</li>
+    </ul>
+  </dialog>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
