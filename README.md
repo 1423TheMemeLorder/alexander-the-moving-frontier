@@ -37,9 +37,7 @@ The map also includes:
 2. Extract the files.
 3. Double-click `index.html`.
 
-The atlas opens in your browser.
-
-An internet connection is required to load the map tiles and external interface resources.
+The atlas opens in your browser. An internet connection is required to load the map tiles and external interface resources.
 
 ## Controls
 
@@ -50,7 +48,7 @@ An internet connection is required to load the map tiles and external interface 
 | `/` | Focus search |
 | `B` | Collapse or open the campaign log |
 | Timeline slider | Jump directly to an episode |
-| Follow button | Keep or release the moving route marker |
+| Follow Camera button | Keep or release the moving route marker |
 
 ## Repository layout
 
