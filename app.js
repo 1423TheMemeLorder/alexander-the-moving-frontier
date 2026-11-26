@@ -332,6 +332,7 @@ const LANDMARKS = [
   { name: "Athens", lat: 37.971, lng: 23.727, kind: "city" },
   { name: "Sparta", lat: 37.075, lng: 22.428, kind: "city" },
   { name: "Delphi", lat: 38.482, lng: 22.501, kind: "oracle" },
+  { name: "Temple of Apollo at Delphi", lat: 38.482, lng: 22.501, kind: "temple" },
   { name: "Ephesus", lat: 37.941, lng: 27.342, kind: "city" },
   { name: "Temple of Artemis", lat: 37.941, lng: 27.342, kind: "temple" },
   { name: "Halicarnassus", lat: 37.038, lng: 27.424, kind: "city" },
@@ -344,6 +345,7 @@ const LANDMARKS = [
   { name: "Jerusalem", lat: 31.778, lng: 35.235, kind: "city" },
   { name: "Memphis", lat: 29.850, lng: 31.250, kind: "city" },
   { name: "Siwa Oracle", lat: 29.203, lng: 25.519, kind: "oracle" },
+  { name: "Temple of Amun at Siwa", lat: 29.203, lng: 25.519, kind: "temple" },
   { name: "Alexandria", lat: 31.200, lng: 29.918, kind: "city" },
   { name: "Babylon", lat: 32.536, lng: 44.420, kind: "city" },
   { name: "Palace of Nebuchadnezzar", lat: 32.536, lng: 44.420, kind: "palace" },
@@ -425,6 +427,7 @@ let activeTypes = new Set(Object.keys(TYPE_META));
 let showCamps = true;
 let markers = [];
 let landmarkMarkers = [];
+let landmarkMarkerByName = new Map();
 let selectedRegionId = "illyria";
 let regionColors = Object.fromEntries(REGIONS.map(region => [region.id, region.color]));
 let regionLayers = new Map();
@@ -582,17 +585,40 @@ function updateRouteDotIcon(isSailing) {
 }
 
 function buildLandmarks() {
+  const groups = new Map();
   LANDMARKS.forEach(lm => {
-    const color = LANDMARK_COLORS[lm.kind] || "#f5d994";
-    const marker = L.circleMarker([lm.lat, lm.lng], {
-      radius: 5, color: color, fillColor: color, fillOpacity: 0.85, weight: 1.5, opacity: 0.9
+    const key = `${lm.lat.toFixed(3)},${lm.lng.toFixed(3)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(lm);
+  });
+
+  groups.forEach(group => {
+    const { lat, lng } = group[0];
+    const priority = { temple:0, oracle:1, tomb:2, palace:3, city:4 };
+    const visualSite = [...group].sort((a,b) => priority[a.kind] - priority[b.kind])[0];
+    const color = LANDMARK_COLORS[visualSite.kind] || "#f5d994";
+    const marker = L.circleMarker([lat, lng], {
+      radius: 6, color, fillColor: color, fillOpacity: 0.92, weight: 1.7, opacity: 0.95,
+      bubblingMouseEvents: false
     });
-    marker.bindPopup(`<div class="landmark-popup-name">${lm.name}</div>`, {
+    const popup = group.map(lm => `<div class="landmark-popup-row"><span class="landmark-popup-kind">${escapeHTML(lm.kind)}</span><strong>${escapeHTML(lm.name)}</strong></div>`).join("");
+    const names = group.map(lm => lm.name).join(" · ");
+    marker.bindPopup(`<div class="landmark-popup-group">${popup}</div>`, {
       closeButton: false, offset: [0, -5], className: 'custom-landmark-popup'
+    });
+    marker.bindTooltip(escapeHTML(names), {
+      permanent: true, direction: "top", offset: [0, -7], className: "landmark-map-label", opacity: .95
     });
     marker.addTo(landmarkLayerGroup);
     landmarkMarkers.push(marker);
+    group.forEach(lm => landmarkMarkerByName.set(lm.name, marker));
   });
+  updateLandmarkLabelVisibility();
+  map.on("zoomend", updateLandmarkLabelVisibility);
+}
+
+function updateLandmarkLabelVisibility() {
+  map.getContainer().classList.toggle("landmark-labels-visible", map.getZoom() >= 5.5);
 }
 
 const els = {
@@ -897,9 +923,11 @@ function renderSearchResults() {
     .filter(result => result.score >= 0).sort((a,b) => b.score - a.score || a.person.name.localeCompare(b.person.name)).slice(0, 7);
   const episodes = EVENTS.map((event,index) => ({ event, index, score:eventSearchScore(event, query) }))
     .filter(result => result.score >= 0).sort((a,b) => b.score - a.score || a.index - b.index).slice(0, 8);
+  const landmarks = LANDMARKS.map(landmark => ({ landmark, score:matchScore(landmark.name, query) }))
+    .filter(result => result.score >= 0).sort((a,b) => b.score - a.score || a.landmark.name.localeCompare(b.landmark.name)).slice(0, 8);
 
-  if (!people.length && !episodes.length) {
-    els.searchResults.innerHTML = `<p class="search-result-empty">No people or episodes match <b>“${escapeHTML(query)}”</b>.</p>`;
+  if (!people.length && !episodes.length && !landmarks.length) {
+    els.searchResults.innerHTML = `<p class="search-result-empty">No people, episodes or landmarks match <b>“${escapeHTML(query)}”</b>.</p>`;
   } else {
     const peopleSection = people.length ? `<section class="search-result-section" aria-label="People">
       <div class="search-result-heading"><span>People</span><strong>${people.length}</strong></div>
@@ -917,7 +945,15 @@ function renderSearchResults() {
         <span class="search-result-kind">${escapeHTML(event.date)}</span>
       </button>`).join("")}
     </section>` : "";
-    els.searchResults.innerHTML = peopleSection + episodesSection;
+    const landmarksSection = landmarks.length ? `<section class="search-result-section" aria-label="Places and monuments">
+      <div class="search-result-heading"><span>Places & monuments</span><strong>${landmarks.length}</strong></div>
+      ${landmarks.map(({landmark}, resultIndex) => `<button type="button" class="search-result" id="search-landmark-${resultIndex}" role="option" aria-selected="false" data-landmark-name="${escapeHTML(landmark.name)}">
+        <span class="search-result-icon landmark" aria-hidden="true"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1"/><path d="M8 1v2M8 13v2M1 8h2m10 0h2"/></svg></span>
+        <span class="search-result-copy"><strong>${escapeHTML(landmark.name)}</strong><small>${escapeHTML(landmark.kind)}</small></span>
+        <span class="search-result-kind">Map</span>
+      </button>`).join("")}
+    </section>` : "";
+    els.searchResults.innerHTML = peopleSection + episodesSection + landmarksSection;
   }
   els.searchResults.hidden = false;
   els.search.setAttribute("aria-expanded", "true");
@@ -966,6 +1002,13 @@ function revealEventFromSearch(index) {
   selectEvent(index, true, false, true);
 }
 
+function revealLandmarkFromSearch(name) {
+  const marker = landmarkMarkerByName.get(name);
+  if (!marker) return;
+  map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 7), { duration:.65 });
+  window.setTimeout(() => marker.openPopup(), 700);
+}
+
 function chooseSearchResult(button) {
   if (!button) return;
   closeSearchResults();
@@ -973,6 +1016,8 @@ function chooseSearchResult(button) {
     openPersonProfile(button.dataset.personId);
   } else if (button.dataset.eventIndex !== undefined) {
     revealEventFromSearch(Number(button.dataset.eventIndex));
+  } else if (button.dataset.landmarkName) {
+    revealLandmarkFromSearch(button.dataset.landmarkName);
   }
 }
 
