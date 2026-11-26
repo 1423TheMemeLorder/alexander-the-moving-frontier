@@ -440,11 +440,108 @@ const regionLayerGroup = L.layerGroup().addTo(map);
 const landmarkLayerGroup = L.layerGroup().addTo(map);
 const effectsLayer = L.layerGroup().addTo(map);
 
-const routeCoords = EVENTS.map(e => [e.lat, e.lng]);
+const eventCoords = EVENTS.map(e => [e.lat, e.lng]);
+// Intermediate points keep the schematic route in the documented campaign
+// corridors. These are regional reconstructions, not surveyed ancient roads.
+const ROUTE_VIA = {
+  "Accession and southern settlement": [[39.9,22.5],[40.6,22.9]],
+  "Outflanking the Thessalian pass": [[40.05,22.45]],
+  "Crossing Mount Haemus": [[40.7,22.5],[41.2,23.3],[42.0,24.2]],
+  "Battle of the Lyginus": [[43.3,25.4]],
+  "Failed assault on Peuce": [[44.1,25.8],[44.7,27.0]],
+  "Night crossing of the Danube": [[44.8,28.4]],
+  "Siege and escape at Pelium": [[43.5,25.0],[42.3,24.0],[41.0,22.8]],
+  "Assault and destruction of Thebes": [[40.2,22.2]],
+  "Crossing into Asia": [[39.8,22.8],[40.5,23.5],[40.8,24.0],[40.9,25.5],[40.4,26.1]],
+  "Rites at Troy": [[40.2,26.4]],
+  "Battle of the Granicus": [[40.1,26.5]],
+  "Sardis surrenders": [[39.5,27.2],[39.1,28.0]],
+  "Siege of Miletus": [[38.8,27.8],[37.9,27.3]],
+  "Siege of Halicarnassus": [[37.2,27.3]],
+  "Pisidian mountain fighting": [[36.8,29.5],[36.9,30.7]],
+  "Gordium and the knot": [[38.3,30.0]],
+  "Illness at Tarsus": [[37.5,32.5],[37.0,33.5]],
+  "Battle of Issus": [[36.7,35.5]],
+  "Rejecting Darius’ first terms": [[36.2,35.9],[35.3,36.0]],
+  "Siege of Tyre": [[34.4,35.4]],
+  "Siege of Gaza": [[32.2,34.9]],
+  "Entry into Egypt": [[31.2,33.2]],
+  "Winter court at Memphis": [[30.8,32.1]],
+  "Journey to Siwa": [[29.6,29.1],[29.3,27.0]],
+  "Foundation of Alexandria": [[31.35,27.2],[31.0,29.0]],
+  "Crossing the Euphrates": [[31.3,30.1],[29.85,31.25],[31.04,32.55],[31.5,34.5],[33.27,35.20],[34.73,36.72],[36.2,37.15]],
+  "Eclipse and pre-battle camp": [[36.5,40.0],[36.7,41.5],[36.5,42.5]],
+  "Battle of Gaugamela": [[36.2,43.1]],
+  "Babylon opens its gates": [[35.5,43.5],[34.5,44.0],[33.4,44.4]],
+  "Susa and the royal treasury": [[32.0,45.8],[31.8,47.0]],
+  "Campaign against the Uxians": [[31.8,48.3]],
+  "Battle of the Persian Gate": [[30.8,50.0],[30.5,51.0]],
+  "Persepolis: occupation and burning": [[30.2,52.0]],
+  "Ecbatana and the pursuit": [[31.5,53.5],[33.0,52.8]],
+  "Death of Darius III": [[35.0,51.8],[35.5,53.0]],
+  "Hyrcanian settlement": [[36.1,54.0]],
+  "Revolt of Satibarzanes": [[36.5,55.0],[36.3,58.0],[35.0,60.5]],
+  "Philotas crisis at Prophthasia": [[33.4,62.0]],
+  "Arachosian base": [[32.0,64.0]],
+  "Crossing the Hindu Kush": [[32.5,66.6],[33.4,67.8],[34.5,69.0]],
+  "Crossing the Oxus": [[36.5,68.0]],
+  "Capture of Bessus": [[37.8,67.0]],
+  "Maracanda occupied": [[39.0,66.8]],
+  "Seven Sogdian towns": [[40.0,68.3]],
+  "Battle of the Jaxartes": [[40.3,69.3]],
+  "Disaster on the Polytimetus": [[39.9,67.5]],
+  "Winter quarters at Bactra": [[38.2,67.0]],
+  "Five-column Sogdian campaign": [[38.5,67.5]],
+  "Death of Cleitus": [[39.5,67.0]],
+  "Spitamenes killed": [[40.2,65.5]],
+  "Nautaca winter base": [[39.7,65.5]],
+  "Capture of the Sogdian Rock": [[38.6,67.0]],
+  "Rock of Chorienes": [[38.5,68.3]],
+  "Bactra: proskynesis crisis": [[37.5,68.0]],
+  "Army divided for India": [[35.5,70.0]],
+  "Aspasian fighting": [[34.8,71.5]],
+  "Siege of Massaga": [[34.9,72.0]],
+  "Bazira and Ora": [[34.6,72.8]],
+  "Siege of Aornus": [[34.5,72.7]],
+  "Crossing the Indus": [[34.4,72.3]],
+  "Alliance at Taxila": [[33.9,72.7]],
+  "Battle of the Hydaspes": [[33.3,73.0]],
+  "Battle and siege of Sangala": [[32.5,74.0]],
+  "Mutiny at the Hyphasis": [[31.8,75.0]],
+  "Fleet built on the Hydaspes": [[31.8,74.9],[32.4,73.9]],
+  "Voyage begins": [[32.3,73.4]],
+  "Mallian campaign": [[31.5,72.9],[30.9,72.5]],
+  "Alexander wounded at the Mallian city": [[30.2,71.7]],
+  "Disaster at the river confluence": [[29.0,70.6]],
+  "Musicanus and Sambus revolts": [[28.2,69.3]],
+  "Patala and the Indus delta": [[26.7,68.4]],
+  "Campaign against the Oreitans": [[25.8,67.6]],
+  "Crossing the Gedrosian desert": [[25.8,64.5],[26.5,62.8]],
+  "Recovery at Pura": [[26.7,61.2]],
+  "Reunion in Carmania": [[28.5,59.0]],
+  "Return to Pasargadae": [[30.0,55.0]],
+  "Susa weddings": [[31.2,51.0]],
+  "Mutiny at Opis": [[33.0,47.0],[33.5,45.0]],
+  "Hephaestion dies at Ecbatana": [[34.3,46.8],[34.7,47.8]],
+  "Campaign against the Cossaeans": [[34.0,48.5]],
+  "Return to Babylon": [[33.0,46.5],[32.6,45.0]]
+};
+const routeSegments = EVENTS.map((event, index) => index === 0
+  ? [eventCoords[0]]
+  : [eventCoords[index - 1], ...(ROUTE_VIA[event.title] || []), eventCoords[index]]);
+function flattenRoute(segments) {
+  return segments.flatMap((segment, index) => index === 0 ? segment : segment.slice(1));
+}
+function routeThrough(eventIndex) { return flattenRoute(routeSegments.slice(0, eventIndex + 1)); }
+function routeFrom(eventIndex) {
+  const future = flattenRoute(routeSegments.slice(eventIndex + 1));
+  return future.length ? [eventCoords[eventIndex], ...future.slice(1)] : [eventCoords[eventIndex]];
+}
+const routeCoords = flattenRoute(routeSegments);
 const routeGeometry = { smoothFactor: 0, lineCap: "round", lineJoin: "round", interactive: false };
 const routeUnderlay = L.polyline(routeCoords, { ...routeGeometry, color: "#13150f", opacity: .65, weight: 7, className: "route-shadow route-base" }).addTo(map);
-const routeFuture = L.polyline(routeCoords, { ...routeGeometry, color: "#dcc784", opacity: .32, weight: 2, dashArray: "5 8", className: "route-future" }).addTo(map);
-const routePast = L.polyline([routeCoords[0]], { ...routeGeometry, color: "#d8ad59", opacity: .95, weight: 3, className: "route-progress" }).addTo(map);
+const routeFuture = L.polyline(routeFrom(0), { ...routeGeometry, color: "#dcc784", opacity: .32, weight: 2, dashArray: "5 8", className: "route-future" }).addTo(map);
+const routePast = L.polyline(routeThrough(0), { ...routeGeometry, color: "#d8ad59", opacity: .95, weight: 3, className: "route-progress" }).addTo(map);
 
 function markerIcon(event, active = false) {
   const meta = TYPE_META[event.type];
@@ -970,9 +1067,9 @@ function selectEvent(index, pan = false, fromAnimation = false, revealDetails = 
   document.documentElement.style.setProperty("--gold", PHASE_COLORS[event.phase] || "#d8ad59");
   
   markers.forEach((marker,i) => marker.setIcon(markerIcon(EVENTS[i], i === index)));
-  routePast.setLatLngs(routeCoords.slice(0,index+1));
-  routeFuture.setLatLngs(routeCoords.slice(index));
-  if (!fromAnimation) routeDotMarker.setLatLng([event.lat,event.lng]);
+  routePast.setLatLngs(routeThrough(index));
+  routeFuture.setLatLngs(routeFrom(index));
+  if (!fromAnimation) routeDotMarker.setLatLng(eventCoords[index]);
 
   triggerSpecialEffects(event, index);
 
@@ -982,24 +1079,41 @@ function selectEvent(index, pan = false, fromAnimation = false, revealDetails = 
   if (pan && followRoute) map.flyTo([event.lat,event.lng], Math.min(Math.max(map.getZoom(), 5), 8), { duration:.8 });
 }
 
-function interpolateRouteSegment(start, end, progress) {
-  const startPoint = map.project(L.latLng(start[0], start[1]), 18);
-  const endPoint = map.project(L.latLng(end[0], end[1]), 18);
-  const point = L.point(startPoint.x + (endPoint.x - startPoint.x) * progress, startPoint.y + (endPoint.y - startPoint.y) * progress);
-  return map.unproject(point, 18);
+function pointAlongLeg(leg, progress) {
+  const lengths = leg.slice(1).map((point, index) => haversine(leg[index], point));
+  const total = lengths.reduce((sum, length) => sum + length, 0);
+  let remaining = total * progress;
+  const visited = [leg[0]];
+  for (let index = 0; index < lengths.length; index++) {
+    const start = leg[index], end = leg[index + 1], length = lengths[index];
+    if (remaining <= length || index === lengths.length - 1) {
+      const fraction = length ? Math.min(1, remaining / length) : 0;
+      const startPoint = map.project(L.latLng(start[0], start[1]), 18);
+      const endPoint = map.project(L.latLng(end[0], end[1]), 18);
+      const point = L.point(startPoint.x + (endPoint.x - startPoint.x) * fraction, startPoint.y + (endPoint.y - startPoint.y) * fraction);
+      return { position: map.unproject(point, 18), visited, remaining: leg.slice(index + 1) };
+    }
+    visited.push(end);
+    remaining -= length;
+  }
+  return { position: L.latLng(leg[leg.length - 1]), visited, remaining: [] };
 }
 
-function setAnimatedRoutePosition(startIndex, position) {
-  routeDotMarker.setLatLng(position);
-  routePast.setLatLngs([...routeCoords.slice(0, startIndex + 1), position]);
-  routeFuture.setLatLngs([position, ...routeCoords.slice(startIndex + 1)]);
+function setAnimatedRoutePosition(startIndex, progress) {
+  const leg = routeSegments[startIndex + 1];
+  const routePosition = pointAlongLeg(leg, progress);
+  const past = [...routeThrough(startIndex), ...routePosition.visited.slice(1), routePosition.position];
+  const future = [routePosition.position, ...routePosition.remaining, ...routeFrom(startIndex + 1).slice(1)];
+  routeDotMarker.setLatLng(routePosition.position);
+  routePast.setLatLngs(past);
+  routeFuture.setLatLngs(future);
 }
 
 function snapToSegment(startIndex) {
   if (!followRoute) return;
-  const endIndex = Math.min(startIndex + 1, routeCoords.length - 1);
+  const endIndex = Math.min(startIndex + 1, EVENTS.length - 1);
   if (endIndex === startIndex) return;
-  const bounds = L.latLngBounds([routeCoords[startIndex], routeCoords[endIndex]]);
+  const bounds = L.latLngBounds(routeSegments[endIndex]);
   if (!map.getBounds().contains(bounds)) map.fitBounds(bounds.pad(0.85), { animate: false, maxZoom: 6 });
 }
 
@@ -1007,7 +1121,6 @@ function animateStep() {
   if (!playing) return;
   if (currentIndex >= EVENTS.length - 1) { stopPlayback(); return; }
   const startIndex = currentIndex, endIndex = currentIndex + 1;
-  const a = routeCoords[startIndex], b = routeCoords[endIndex];
   const duration = Number(els.speed.value);
   const moveDuration = duration * 0.72;
   const started = performance.now();
@@ -1017,7 +1130,7 @@ function animateStep() {
     if (!playing || currentIndex !== startIndex) return;
     const t = Math.min(1, (now - started) / moveDuration);
     const eased = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
-    setAnimatedRoutePosition(startIndex, interpolateRouteSegment(a, b, eased));
+    setAnimatedRoutePosition(startIndex, eased);
     if (t < 1) {
       animationFrame = requestAnimationFrame(frame);
     } else {
@@ -1043,9 +1156,9 @@ function stopPlayback() {
   playing = false; clearTimeout(playTimer); playTimer = null;
   if (animationFrame !== null) cancelAnimationFrame(animationFrame);
   animationFrame = null;
-  routeDotMarker.setLatLng(routeCoords[currentIndex]);
-  routePast.setLatLngs(routeCoords.slice(0, currentIndex + 1));
-  routeFuture.setLatLngs(routeCoords.slice(currentIndex));
+  routeDotMarker.setLatLng(eventCoords[currentIndex]);
+  routePast.setLatLngs(routeThrough(currentIndex));
+  routeFuture.setLatLngs(routeFrom(currentIndex));
   els.playIcon.textContent = "▶"; els.playButton.setAttribute("aria-label", "Play timeline");
   
   const event = EVENTS[currentIndex];
