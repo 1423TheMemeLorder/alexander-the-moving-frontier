@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="An animated, source-aware map of Alexander the Great's campaigns, 338-323 BCE." />
+  <meta name="description" content="An animated, source-aware map of Alexander the Great's campaigns, 338–323 BCE." />
   <title>Alexander · The Moving Frontier</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -13,16 +14,19 @@
     <header class="topbar">
       <div class="topbar-main">
         <div class="brand-block">
-          <div class="eyebrow">CAMPAIGN ATLAS · 338-323 BCE</div>
+          <div class="eyebrow">CAMPAIGN ATLAS · 338–323 BCE</div>
           <h1>Alexander <span>The Moving Frontier</span></h1>
         </div>
 
-        <label class="header-search">
-          <span class="sr-only">Search campaign events</span>
-          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-          <input id="searchInput" type="search" placeholder="Search events, people & places" />
-          <kbd>/</kbd>
-        </label>
+        <div class="search-shell" id="searchShell">
+          <label class="header-search">
+            <span class="sr-only">Search people, campaign events and places</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+            <input id="searchInput" type="search" placeholder="Search people, events & places" role="combobox" aria-autocomplete="list" aria-controls="searchResults" aria-expanded="false" autocomplete="off" />
+            <kbd>/</kbd>
+          </label>
+          <div class="search-results" id="searchResults" role="listbox" aria-label="Search results" hidden></div>
+        </div>
 
         <div class="header-actions">
           <button class="quiet-button" id="sourcesButton" aria-controls="sourcesDialog">Sources</button>
@@ -41,7 +45,7 @@
 
     <main class="workspace" id="workspace">
       <button class="sidebar-toggle" id="sidebarToggle" aria-controls="campaignSidebar" aria-expanded="true" title="Collapse campaign log">
-        <span class="sidebar-toggle-icon" aria-hidden="true"><</span>
+        <span class="sidebar-toggle-icon" aria-hidden="true">‹</span>
         <span class="sidebar-toggle-label">Log</span>
       </button>
 
@@ -54,7 +58,7 @@
           <div class="sidebar-meta"><strong id="eventCount">0</strong> episodes</div>
         </div>
         <div class="timeline-heading">
-          <span>338-323 BCE</span>
+          <span>338–323 BCE</span>
           <button id="latestButton" class="text-button">Latest →</button>
         </div>
         <section class="event-list" id="eventList" aria-live="polite"></section>
@@ -70,7 +74,7 @@
               <span class="panel-eyebrow">MAP LAYER</span>
               <h2>Historical regions</h2>
             </div>
-            <button class="region-panel-close" id="regionPanelClose" aria-label="Close historical regions panel">x</button>
+            <button class="region-panel-close" id="regionPanelClose" aria-label="Close historical regions panel">×</button>
           </div>
           <label class="toggle-row region-visibility"><input type="checkbox" id="regionsToggle" checked /><span>Show region boundaries and labels</span></label>
           <label class="field-label" for="regionSelect">Selected region</label>
@@ -91,7 +95,7 @@
             <input id="regionColorFile" class="sr-only" type="file" accept="application/json,.json" />
           </div>
           <p class="region-save-status" id="regionSaveStatus" role="status">Loading saved colours…</p>
-          <p class="region-storage-note">Changes are saved automatically in this browser's local database. Export the JSON file as a portable backup.</p>
+          <p class="region-storage-note">Changes are saved automatically in this browser’s local database. Export the JSON file as a portable backup.</p>
         </section>
 
         <div class="map-legend" aria-label="Map legend">
@@ -103,12 +107,12 @@
         </div>
 
         <article class="event-card is-empty" id="eventCard" aria-live="polite" aria-hidden="true">
-          <button class="card-close" id="cardClose" aria-label="Close event details">x</button>
+          <button class="card-close" id="cardClose" aria-label="Close event details">×</button>
           <div class="card-kicker" id="cardKicker">SELECT AN EVENT</div>
           <h2 id="cardTitle">Trace the campaign</h2>
           <p class="card-place" id="cardPlace">Choose a marker or timeline entry.</p>
           <div class="card-tags" id="cardTags"></div>
-          <p id="cardSummary">Press play to animate Alexander's route. The map pauses briefly at each campaign episode.</p>
+          <p id="cardSummary">Press play to animate Alexander’s route. The map pauses briefly at each campaign episode.</p>
           <dl class="decision-grid" id="decisionGrid"></dl>
           <div class="confidence-note" id="confidenceNote"></div>
           <div class="card-nav">
@@ -130,23 +134,23 @@
           </div>
           <label class="speed-control">SPEED
             <select id="speedSelect" aria-label="Animation speed">
-              <option value="2200">0.5x</option>
-              <option value="1300" selected>1x</option>
-              <option value="700">2x</option>
-              <option value="360">4x</option>
+              <option value="2200">0.5×</option>
+              <option value="1300" selected>1×</option>
+              <option value="700">2×</option>
+              <option value="360">4×</option>
             </select>
           </label>
-          <button class="follow-button is-active" id="followButton" aria-pressed="true">Follow Camera</button>
+          <button class="follow-button is-active" id="followButton" aria-pressed="true">Follow</button>
         </div>
       </section>
     </main>
   </div>
 
   <dialog id="sourcesDialog" class="info-dialog">
-    <form method="dialog"><button class="dialog-close" aria-label="Close">x</button></form>
+    <form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form>
     <div class="dialog-eyebrow">READING THE EVIDENCE</div>
     <h2>Sources, uncertainty & scope</h2>
-    <p>This is a source-aware reconstruction of major battles, sieges, assaults, enemy attacks, strategic decisions, winter quarters and attested halts connected with Alexander's career. Ancient narratives do not preserve every daily camp or skirmish.</p>
+    <p>This is a source-aware reconstruction of major battles, sieges, assaults, enemy attacks, strategic decisions, winter quarters and attested halts connected with Alexander’s career. Ancient narratives do not preserve every daily camp or skirmish.</p>
     <div class="method-grid">
       <div><b>Exact</b><p>Securely dated or closely located by the evidence.</p></div>
       <div><b>Approximate</b><p>Month, season or modern coordinate is an informed estimate.</p></div>
@@ -154,22 +158,49 @@
     </div>
     <h3>Primary and reference works</h3>
     <ol class="source-list" id="sourceList"></ol>
-    <p class="smallprint">Dates are BCE. Route lines follow source-supported land, coastal, river and crossing corridors; intermediate control points keep the reconstruction off implausible open-water shortcuts. Exact ancient roads and landing places remain approximate where the evidence is incomplete. Blue dashed legs mark water travel. The editable historical-region polygons—including Illyria—are broad orientation zones, not claims of fixed or universally agreed ancient borders. Modern borders and labels come from the selected basemap.</p>
+    <p class="smallprint">Dates are BCE. Geographic lines are schematic great-circle links between episode markers. The editable historical-region polygons—including Illyria—are broad orientation zones, not claims of fixed or universally agreed ancient borders. Modern borders and labels come from the selected basemap.</p>
   </dialog>
 
   <dialog id="aboutDialog" class="info-dialog compact-dialog">
-    <form method="dialog"><button class="dialog-close" aria-label="Close">x</button></form>
+    <form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form>
     <div class="dialog-eyebrow">MAP GUIDE</div>
     <h2>How to explore</h2>
     <ul>
-      <li><b>Play</b> animates the route and keeps the moving marker centred on the campaign line. A boat appears only while a blue water leg is being traversed.</li>
+              <li><b>Play</b> animates the route and keeps the moving dot centred on the campaign line.</li>
       <li><b>Drag the timeline</b> to jump to any episode.</li>
-      <li><b>Select a marker</b> for Alexander's decision, outcome, camp note and evidence confidence.</li>
+      <li><b>Select a marker</b> for Alexander’s decision, outcome, camp note and evidence confidence.</li>
+      <li><b>Search a person</b> to open a profile, then choose one of their key episodes to locate it on the map.</li>
       <li><b>Filter</b> battles, sieges, hostile actions, decisions, camps and political events from the top bar.</li>
       <li><b>Collapse the campaign log</b> with the edge button or the <kbd>B</kbd> key.</li>
       <li><b>Historical regions</b> opens editable geographic polygons, including Illyria. Click a region to recolour it; colours are saved automatically.</li>
-      <li><b>Switch basemaps</b> with the layer control in the map's upper-right corner.</li>
+      <li><b>Switch basemaps</b> with the layer control in the map’s upper-right corner.</li>
     </ul>
+  </dialog>
+
+  <dialog id="personDialog" class="info-dialog person-dialog" aria-labelledby="personName">
+    <form method="dialog"><button class="dialog-close" aria-label="Close person profile">×</button></form>
+    <div class="person-heading">
+      <div class="person-monogram" id="personMonogram" aria-hidden="true">A</div>
+      <div>
+        <div class="dialog-eyebrow">PERSON IN THE CAMPAIGN</div>
+        <h2 id="personName">Alexander the Great</h2>
+        <p class="person-meta" id="personMeta"></p>
+      </div>
+    </div>
+    <p class="person-aliases" id="personAliases"></p>
+    <p class="person-summary" id="personSummary"></p>
+    <section class="person-connection" aria-labelledby="personConnectionLabel">
+      <h3 id="personConnectionLabel">Place in the campaign</h3>
+      <p id="personConnection"></p>
+    </section>
+    <section class="person-episodes" aria-labelledby="personEpisodesLabel">
+      <h3 id="personEpisodesLabel">Key episodes in this atlas</h3>
+      <div class="person-episode-list" id="personEpisodeList"></div>
+    </section>
+    <section class="person-sources" aria-labelledby="personSourcesLabel">
+      <h3 id="personSourcesLabel">Read in the atlas sources</h3>
+      <div id="personSourceList"></div>
+    </section>
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
