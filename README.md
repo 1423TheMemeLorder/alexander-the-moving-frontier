@@ -4,6 +4,9 @@ An interactive campaign atlas of Alexander III of Macedon, from Chaeronea in 338
 
 This is not a map of an empire at its maximum extent. It is a chronological reconstruction of decisions, battles, sieges, crossings, reversals, winter quarters, political settlements, and the long return from the Indus. The atlas is built around a simple rule: when the evidence is uncertain, the interface should say so instead of turning an ancient narrative into fake GPS precision.
 
+![Alexander · The Moving Frontier atlas showing the Indus campaign and sailing route](assets/alexander-moving-frontier-atlas.png)
+
+
 ## What is in the atlas
 
 The current edition contains **83 episodes**, divided into:
