@@ -1273,6 +1273,8 @@ function fitCampaignBounds() {
   terrain.redraw();
 }
 
+let savedSidebarPreference = null;
+
 function setSidebarCollapsed(collapsed, persist = true) {
   els.workspace.classList.toggle("sidebar-collapsed", collapsed);
   els.sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
@@ -1280,14 +1282,21 @@ function setSidebarCollapsed(collapsed, persist = true) {
   const icon = els.sidebarToggle.querySelector(".sidebar-toggle-icon");
   if (icon) icon.textContent = collapsed ? "›" : "‹";
   if (persist) {
+    savedSidebarPreference = collapsed;
     try { localStorage.setItem("atlas.sidebarCollapsed", String(collapsed)); } catch (_) {}
   }
   window.setTimeout(() => map.invalidateSize({ pan: false }), 240);
 }
 
-let savedSidebarState = false;
-try { savedSidebarState = localStorage.getItem("atlas.sidebarCollapsed") === "true"; } catch (_) {}
-setSidebarCollapsed(savedSidebarState, false);
+try {
+  const storedSidebarState = localStorage.getItem("atlas.sidebarCollapsed");
+  if (storedSidebarState !== null) savedSidebarPreference = storedSidebarState === "true";
+} catch (_) {}
+const sidebarBreakpoint = window.matchMedia("(max-width: 900px)");
+setSidebarCollapsed(sidebarBreakpoint.matches || (savedSidebarPreference ?? false), false);
+sidebarBreakpoint.addEventListener("change", event => {
+  setSidebarCollapsed(event.matches || (savedSidebarPreference ?? false), false);
+});
 
 els.playButton.addEventListener("click", () => playing ? stopPlayback() : startPlayback());
 els.range.addEventListener("input", event => { stopPlayback(); selectEvent(Number(event.target.value), true); });
